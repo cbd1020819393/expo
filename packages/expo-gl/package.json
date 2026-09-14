@@ -1,72 +1,66 @@
 {
-  "name": "expo-gl",
+  "license": "MIT",
+  "devDependencies": {
+    "@react-native/typescript-config": "0.79.5",
+    "@types/react": "18.2.79",
+    "@types/invariant": "^2.2.33",
+    "@types/webgl2": "^0.0.6",
+    "react": "18.2.0",
+    "react-native": "0.72.5",
+    "typescript": "5.0.4",
+    "@react-native-oh/react-native-harmony-cli": "^0.77.50",
+    "metro": "^0.81.0"
+  },
+  "author": "650 Industries, Inc.",
+  "name": "@oh-rn/expo-gl",
+  "description": "HarmonyOS (RNOH) adaptation of expo-gl: GLView as an OpenGL ES render target with an ExpoWebGLRenderingContext implementing the WebGL 2.0 specification subset.",
+  "main": "./src/index.ts",
   "version": "58.0.0",
-  "description": "Provides GLView that acts as OpenGL ES render target and gives GL context object implementing WebGL 2.0 specification.",
   "keywords": [
-    "expo",
-    "gl",
-    "glview",
     "react-native",
-    "webgl"
+    "harmony",
+    "harmonyos",
+    "expo-gl",
+    "webgl",
+    "glview"
   ],
   "homepage": "https://docs.expo.dev/versions/latest/sdk/gl-view/",
-  "bugs": {
-    "url": "https://github.com/expo/expo/issues"
-  },
-  "license": "MIT",
-  "author": "650 Industries, Inc.",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo.git",
     "directory": "packages/expo-gl"
   },
-  "sideEffects": false,
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
-  "scripts": {
-    "build": "expo-build src",
-    "clean": "expo-module clean",
-    "lint": "oxlint --config oxlint.config.mjs .",
-    "format": "expo-module format",
-    "test": "jest",
-    "test:snapshots": "jest --updateSnapshot",
-    "prepublishOnly": "expo-module prepublishOnly",
-    "depscheck": "expo-module depscheck",
-    "typecheck": "tsc -p tsconfig.json"
+  "peerDependencies": {
+    "react": "*",
+    "react-native": ">=0.72"
   },
   "dependencies": {
     "invariant": "^2.2.4"
   },
-  "devDependencies": {
-    "@types/invariant": "^2.2.33",
-    "@types/offscreencanvas": "2019.6.4",
-    "@types/react": "~19.2.0",
-    "@types/react-test-renderer": "^19.1.0",
-    "@types/webgl2": "^0.0.6",
-    "expo": "workspace:*",
-    "expo-module-scripts": "workspace:*",
-    "react-test-renderer": "19.2.0"
+  "files": [
+    "src/",
+    "harmony/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "codegen-lib": "react-native codegen-harmony --cpp-output-path ./harmony/expo_gl/src/main/cpp/generated --ets-output-path ./harmony/expo_gl/src/main/ets/generated"
   },
-  "peerDependencies": {
-    "expo": "*",
-    "react": "*",
-    "react-dom": "*",
-    "react-native": "*",
-    "react-native-reanimated": "*",
-    "react-native-web": "*"
-  },
-  "peerDependenciesMeta": {
-    "react-dom": {
-      "optional": true
+  "harmony": {
+    "alias": "expo-gl",
+    "autolinking": {
+      "cmakeLibraryTargetName": "expo_gl",
+      "ohPackageName": "@oh-rn/expo-gl",
+      "etsPackageClassName": "ExpoGlPackage",
+      "cppPackageClassName": "ExpoGlPackage"
     },
-    "react-native-reanimated": {
-      "optional": true
-    },
-    "react-native-web": {
-      "optional": true
-    }
-  },
-  "jest": {
-    "preset": "expo-module-scripts"
+    "codegenConfig": [
+      {
+        "version": 1,
+        "specPaths": [
+          "./src/specs/v1"
+        ]
+      }
+    ]
   }
 }

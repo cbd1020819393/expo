@@ -1,8 +1,35 @@
 {
-  "extends": "expo-module-scripts/tsconfig.base",
+  "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "noEmit": true
+    "noEmit": false,
+    "declaration": true,
+    "jsx": "react",
+    "sourceMap": true,
+    "removeComments": false,
+    "allowImportingTsExtensions": false
   },
-  "include": ["./src"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/__tests__/*",
+    "node_modules/**",
+    "oh_modules/**",
+    "example*/**",
+    "harmony*/**",
+    "android/**",
+    "ios/**",
+    "windows/**",
+    "macos/**",
+    "linux/**",
+    "dist/**",
+    "build/**",
+    "out/**",
+    "lib/**",
+    "**/.*/**",
+    "__tests__/**",
+    "**/*.test.*",
+    "**/*.spec.*"
+  ]
 }

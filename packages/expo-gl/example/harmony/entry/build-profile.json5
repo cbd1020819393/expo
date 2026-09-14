@@ -1,0 +1,19 @@
+{
+  "apiType": "stageMode",
+  "buildOption": {
+    "externalNativeOptions": {
+      "path": "./src/main/cpp/CMakeLists.txt",
+      "arguments": "-DRNOH_C_API_ARCH=1",
+      "cppFlags": "-DRNOH_C_API_ARCH=1",
+      // "abiFilters": ["arm64-v8a", "x86_64"]
+    }
+  },
+  "targets": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "ohosTest",
+    }
+  ]
+}

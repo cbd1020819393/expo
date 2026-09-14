@@ -1,9 +1,3 @@
-import {
-  UnavailabilityError,
-  requireNativeModule,
-  requireNativeView as requireNativeViewManager,
-  CodedError,
-} from 'expo';
 import * as React from 'react';
 import { Platform, View, findNodeHandle } from 'react-native';
 
@@ -17,15 +11,53 @@ import type {
   GLViewProps,
 } from './GLView.types';
 import { createWorkletContextManager } from './GLWorkletContextManager';
+import NativeExpoGLModule from './specs/v1/NativeExpoGL';
+import ExpoGLViewNative from './specs/v1/ExpoGLViewNativeComponent';
 
 // @docsMissing
 export type WebGLObject = {
   id: number;
 };
 
-const GLNativeModule = requireNativeModule('ExpoGL');
-const NativeView = requireNativeViewManager('ExpoGL');
+/**
+ * Minimal equivalents of the `expo` (expo-modules-core) error helpers used by
+ * the upstream GLView implementation. `expo-modules-core` has no HarmonyOS
+ * adaptation, so the same semantics are reproduced here.
+ */
+export class CodedError extends Error {
+  code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+export class UnavailabilityError extends CodedError {
+  constructor(moduleName: string, propertyName: string) {
+    super(
+      'ERR_UNAVAILABLE',
+      `The method or property ${moduleName}.${propertyName} is not available on ${Platform.OS}, are you sure you've linked all the native dependencies properly?`
+    );
+  }
+}
+
+const GLNativeModule = NativeExpoGLModule;
 const workletContextManager = createWorkletContextManager();
+
+// Eagerly install the WebGL bindings (global constructors/constants) on the
+// current JS runtime. This mirrors the original `OnCreate` module hook that
+// calls `EXGLInstallWebGLBindings` on Android/iOS; on HarmonyOS the
+// `jsi::Runtime` pointer is only reachable from inside a native TurboModule
+// call, hence the explicit sync method. Safe (idempotent) to call again.
+if (GLNativeModule && GLNativeModule.prepareGLRuntime) {
+  try {
+    GLNativeModule.prepareGLRuntime();
+  } catch {
+    // Remote debugging or module registration failure — `getGl` will report
+    // `ERR_GL_NOT_AVAILABLE`, same as the upstream behavior.
+  }
+}
 
 export function getWorkletContext(contextId: number): ExpoWebGLRenderingContext | undefined {
   'worklet';
@@ -38,7 +70,7 @@ export function getWorkletContext(contextId: number): ExpoWebGLRenderingContext 
  * Its drawing buffer is presented as the contents of the View every frame.
  */
 export class GLView extends React.Component<GLViewProps> {
-  static NativeView: any;
+  static NativeView: any = ExpoGLViewNative;
 
   static defaultProps = {
     msaaSamples: 4,
@@ -100,15 +132,10 @@ export class GLView extends React.Component<GLViewProps> {
 
     return (
       <View {...viewProps}>
-        <NativeView
+        <ExpoGLViewNative
           ref={this._setNativeRef}
           style={{
             flex: 1,
-            ...(Platform.OS === 'ios'
-              ? {
-                  backgroundColor: 'transparent',
-                }
-              : {}),
           }}
           onSurfaceCreate={this._onSurfaceCreate}
           enableExperimentalWorkletSupport={enableExperimentalWorkletSupport}
@@ -151,7 +178,7 @@ export class GLView extends React.Component<GLViewProps> {
 
   // @docsMissing
   async createCameraTextureAsync(cameraRefOrHandle: ComponentOrHandle): Promise<WebGLTexture> {
-    if (!GLNativeModule.createCameraTextureAsync) {
+    if (!GLNativeModule || !GLNativeModule.createCameraTextureAsync) {
       throw new UnavailabilityError('expo-gl', 'createCameraTextureAsync');
     }
 
@@ -168,7 +195,7 @@ export class GLView extends React.Component<GLViewProps> {
 
   // @docsMissing
   async destroyObjectAsync(glObject: WebGLObject): Promise<boolean> {
-    if (!GLNativeModule.destroyObjectAsync) {
+    if (!GLNativeModule || !GLNativeModule.destroyObjectAsync) {
       throw new UnavailabilityError('expo-gl', 'destroyObjectAsync');
     }
     return await GLNativeModule.destroyObjectAsync(glObject.id);
@@ -187,8 +214,6 @@ export class GLView extends React.Component<GLViewProps> {
     return await GLView.takeSnapshotAsync(exglCtxId, options);
   }
 }
-
-GLView.NativeView = NativeView;
 
 function unregisterGLContext(exglCtxId: number) {
   if (global.__EXGLContexts) {
