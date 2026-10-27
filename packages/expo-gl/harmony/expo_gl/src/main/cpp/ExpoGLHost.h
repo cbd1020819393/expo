@@ -57,6 +57,10 @@ public:
 
   bool isHeadless() const { return nativeWindow_ == nullptr; }
   const std::string &xcomponentId() const { return xcomponentId_; }
+  // Owned by this host when the window was created from a surfaceId
+  // (prepareSurface) — must be destroyed on teardown. Windows handed over by
+  // OnSurfaceCreatedCb still belong to the XComponent.
+  void *nativeWindow() const { return nativeWindow_; }
 
   EXGLContextId exglCtxId = 0;
 
@@ -109,6 +113,11 @@ void HostOnSurfaceChanged(
   uint32_t width,
   uint32_t height);
 void HostOnSurfaceDestroyed(const std::string &xcomponentId);
+
+// [ArkTS thread, NAPI destroySurface] Teardown for surfaceId-backed hosts:
+// HostOnSurfaceDestroyed plus releasing the OHNativeWindow that
+// prepareSurface created from the surfaceId.
+void HostDestroySurfaceContext(const std::string &xcomponentId);
 
 // XComponents whose surfaces were created with a zero size; keyed by
 // XComponent id. Mirrors Android's `onSurfaceTextureWasCalledWithZeroSize`

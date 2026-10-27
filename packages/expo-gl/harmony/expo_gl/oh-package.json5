@@ -1,1 +1,21 @@
-{"license":"Apache-2.0","devDependencies":{},"author":"React Native for OpenHarmony adaptation team","name":"@oh-rn/expo-gl","description":"HarmonyOS (RNOH) implementation of expo-gl: WebGL context rendering via XComponent + EGL and the ExpoGL TurboModule. Version tracks the upstream expo-gl release.","main":"index.ets","version":"58.0.0","dependencies":{"@rnoh/react-native-openharmony":"file:../react_native_openharmony_release.har"},"metadata":{"sourceRoots":["./src/main"],"debug":true},"compatibleSdkVersion":13,"compatibleSdkType":"HarmonyOS","obfuscated":false}
+{
+  "license": "Apache-2.0",
+  "devDependencies": {},
+  "author": "React Native for OpenHarmony adaptation team",
+  "name": "@react-native-ohos/expo-gl",
+  "description": "HarmonyOS (RNOH) implementation of expo-gl: WebGL context rendering via XComponent + EGL and the ExpoGL TurboModule. Version tracks the upstream expo-gl release.",
+  "main": "index.ets",
+  "version": "1.0.0-beta.1",
+  "dependencies": {
+    "@rnoh/react-native-openharmony": "file:../react_native_openharmony_release.har"
+  },
+  "metadata": {
+    "sourceRoots": [
+      "./src/main"
+    ],
+    "debug": true
+  },
+  "compatibleSdkVersion": 13,
+  "compatibleSdkType": "HarmonyOS",
+  "obfuscated": false
+}

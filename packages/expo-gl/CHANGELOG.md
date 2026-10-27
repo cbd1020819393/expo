@@ -1,5 +1,13 @@
 # Changelog
 
+### 鸿蒙化Changelog
+
+## [1.0.0-beta.1] - 2026-10
+
+### Added
+
+- expo-gl performs HarmonyOS adaptation
+
 ## Unpublished
 
 ### 🛠 Breaking changes
