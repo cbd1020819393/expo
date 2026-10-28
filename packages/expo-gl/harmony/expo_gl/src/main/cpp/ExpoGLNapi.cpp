@@ -197,9 +197,10 @@ napi_value PrepareSurfaceExport(napi_env env, napi_callback_info info) {
     int32_t geoWidth = static_cast<int32_t>(width);
     int32_t geoHeight = static_cast<int32_t>(height);
     if (geoWidth > 0 && geoHeight > 0) {
-      // SET_BUFFER_GEOMETRY takes (height, width) per the OHOS NDK docs.
+      // SET_BUFFER_GEOMETRY takes (width, height); GET takes (height, width) —
+      // the asymmetric order is documented in external_window.h.
       OH_NativeWindow_NativeWindowHandleOpt(windowShared, SET_BUFFER_GEOMETRY,
-          geoHeight, geoWidth);
+          geoWidth, geoHeight);
       EXGLSysLog("EXGL: surface %s sized %dx%d from ArkTS", idStr.c_str(),
           geoWidth, geoHeight);
     } else {
@@ -224,7 +225,7 @@ napi_value PrepareSurfaceExport(napi_env env, napi_callback_info info) {
         geoWidth = 875;
         geoHeight = 875;
         OH_NativeWindow_NativeWindowHandleOpt(windowShared, SET_BUFFER_GEOMETRY,
-            geoHeight, geoWidth);
+            geoWidth, geoHeight);
         EXGLSysLog("EXGL: forced fallback geometry 875x875");
       }
     }
