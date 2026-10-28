@@ -6,3 +6,4 @@
  */
 
 export * from "./ExpoGL"
+export * from "./ExpoAsset"
