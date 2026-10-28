@@ -22,6 +22,19 @@ declare interface ExpoGlNativeModule {
    * id. Only the first registration is honored (subsequent calls are no-ops).
    */
   registerSurfaceListener(listener: (xcomponentId: string, exglCtxId: number) => void): void;
+
+  /**
+   * Hand an XComponent surfaceId (+ its pixel size) to the native side, which
+   * creates the OHNativeWindow, EGL context and GL thread for it.
+   */
+  prepareSurface(surfaceId: string, xcomponentId: string, width: number, height: number): void;
+
+  /**
+   * Tear down the GL context bound to `xcomponentId`. Must be called from
+   * aboutToDisappear: the controller-based XComponent never delivers the
+   * native OnSurfaceDestroyed callback, so this is the only release path.
+   */
+  destroySurface(xcomponentId: string): void;
 }
 
 declare module 'libexpo_gl.so' {

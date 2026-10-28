@@ -197,9 +197,10 @@ napi_value PrepareSurfaceExport(napi_env env, napi_callback_info info) {
     int32_t geoWidth = static_cast<int32_t>(width);
     int32_t geoHeight = static_cast<int32_t>(height);
     if (geoWidth > 0 && geoHeight > 0) {
-      // SET_BUFFER_GEOMETRY takes (height, width) per the OHOS NDK docs.
+      // SET_BUFFER_GEOMETRY takes (width, height); GET takes (height, width) —
+      // the asymmetric order is documented in external_window.h.
       OH_NativeWindow_NativeWindowHandleOpt(windowShared, SET_BUFFER_GEOMETRY,
-          geoHeight, geoWidth);
+          geoWidth, geoHeight);
       EXGLSysLog("EXGL: surface %s sized %dx%d from ArkTS", idStr.c_str(),
           geoWidth, geoHeight);
     } else {
@@ -224,7 +225,7 @@ napi_value PrepareSurfaceExport(napi_env env, napi_callback_info info) {
         geoWidth = 875;
         geoHeight = 875;
         OH_NativeWindow_NativeWindowHandleOpt(windowShared, SET_BUFFER_GEOMETRY,
-            geoHeight, geoWidth);
+            geoWidth, geoHeight);
         EXGLSysLog("EXGL: forced fallback geometry 875x875");
       }
     }
@@ -233,6 +234,27 @@ napi_value PrepareSurfaceExport(napi_env env, napi_callback_info info) {
     HostOnSurfaceCreated(idStr, windowShared);
   }).detach();
 
+  napi_value undefined;
+  napi_get_undefined(env, &undefined);
+  return undefined;
+}
+
+// NAPI `destroySurface`, called from the ArkTS view's aboutToDisappear: the
+// controller-based XComponent never delivers OnSurfaceDestroyedCb, so this is
+// the only teardown path for surfaceId-backed hosts.
+napi_value DestroySurfaceExport(napi_env env, napi_callback_info info) {
+  size_t argc = 1;
+  napi_value argv[1] = {nullptr};
+  napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+  if (argc >= 1) {
+    size_t len = 0;
+    if (napi_get_value_string_utf8(env, argv[0], nullptr, 0, &len) == napi_ok && len > 0) {
+      std::string id(len, '\0');
+      if (napi_get_value_string_utf8(env, argv[0], id.data(), len + 1, &len) == napi_ok) {
+        HostDestroySurfaceContext(id);
+      }
+    }
+  }
   napi_value undefined;
   napi_get_undefined(env, &undefined);
   return undefined;
@@ -331,6 +353,8 @@ napi_value InitExpoGlModule(napi_env env, napi_value exports) {
     {"registerSurfaceListener", nullptr, RegisterSurfaceListenerExport, nullptr, nullptr, nullptr,
      napi_default, nullptr},
     {"prepareSurface", nullptr, PrepareSurfaceExport, nullptr, nullptr, nullptr, napi_default,
+     nullptr},
+    {"destroySurface", nullptr, DestroySurfaceExport, nullptr, nullptr, nullptr, napi_default,
      nullptr},
   };
   napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

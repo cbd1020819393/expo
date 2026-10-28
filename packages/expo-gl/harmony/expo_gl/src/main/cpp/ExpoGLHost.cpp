@@ -18,6 +18,7 @@
 #include <multimedia/image_framework/image/image_common.h>
 #include <multimedia/image_framework/image/image_packer_native.h>
 #include <multimedia/image_framework/image/pixelmap_native.h>
+#include <native_window/external_window.h>
 
 #include "ExpoGLNapi.h"
 #include "exgl/EXGLNativeApi.h"
@@ -144,6 +145,18 @@ bool GLHostContext::initEGL() {
   // Enable buffer preservation — allows apps to draw over previous frames
   // without clearing (same as Android GLThread.initEGL).
   eglSurfaceAttrib(display_, surface_, EGL_SWAP_BEHAVIOR, EGL_BUFFER_PRESERVED);
+
+  // Present one transparent frame right away: the XComponent surface stays
+  // black until the first eglSwapBuffers, which is JS-driven and only happens
+  // after onContextCreate. The config has an alpha channel, so the page
+  // background shows through until then.
+  if (nativeWindow_ != nullptr) {
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClearDepthf(1.f);
+    glClearStencil(0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    eglSwapBuffers(display_, surface_);
+  }
   return true;
 }
 
@@ -397,6 +410,31 @@ void HostOnSurfaceDestroyed(const std::string &xcomponentId) {
   }
   EXGLSysLog("EXGL: destroying surface context %u", host->exglCtxId);
   host->stopAndJoin();
+  EXGLContextDestroy(host->exglCtxId);
+}
+
+// NAPI `destroySurface` path (ArkTS aboutToDisappear): same teardown as
+// HostOnSurfaceDestroyed, plus releasing the OHNativeWindow that
+// prepareSurface created from the surfaceId.
+void HostDestroySurfaceContext(const std::string &xcomponentId) {
+  auto &state = hostState();
+  std::shared_ptr<GLHostContext> host;
+  {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    auto iter = state.surfaceHosts.find(xcomponentId);
+    if (iter == state.surfaceHosts.end()) {
+      return;
+    }
+    host = iter->second;
+    state.surfaceHosts.erase(iter);
+    state.hostsById.erase(host->exglCtxId);
+  }
+  EXGLSysLog("EXGL: destroying surface context %u", host->exglCtxId);
+  host->stopAndJoin();
+  if (!host->isHeadless()) {
+    OH_NativeWindow_DestroyNativeWindow(
+      reinterpret_cast<OHNativeWindow *>(host->nativeWindow()));
+  }
   EXGLContextDestroy(host->exglCtxId);
 }
 

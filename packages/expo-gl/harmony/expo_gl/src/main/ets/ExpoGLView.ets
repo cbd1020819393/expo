@@ -76,11 +76,9 @@ export struct ExpoGLView {
       this.eventEmitter?.emit('surfaceCreate', { exglCtxId });
     });
 
-    // RNOH-embedded ArkTS components are mounted through a C-API custom node
-    // and the framework never fires the XComponent `onLoad` event there (the
-    // same surface works when the very same component is hosted directly on a
-    // page). Poll the controller until the surface id becomes available
-    // instead — the same fallback vision-camera employs for its preview.
+    // The surfaceId is normally available as soon as the XComponent `onLoad`
+    // below fires; keep a short-interval polling fallback for embeds where
+    // onLoad is never delivered.
     this.pollSurfaceReady();
   }
 
@@ -88,7 +86,7 @@ export struct ExpoGLView {
     if (this.surfacePrepared) {
       return;
     }
-    if (attempt >= 100) {
+    if (attempt >= 600) {
       console.error('[ExpoGLProbe] ArkTS: surfaceId/size never became available');
       return;
     }
@@ -116,7 +114,7 @@ export struct ExpoGLView {
     } catch (e) {
       // Controller not bound to a surface yet — keep polling.
     }
-    setTimeout(() => this.pollSurfaceReady(attempt + 1), 100);
+    setTimeout(() => this.pollSurfaceReady(attempt + 1), 16);
   }
 
   // The native side must SET the producer window buffer geometry itself:
@@ -132,6 +130,13 @@ export struct ExpoGLView {
   aboutToDisappear(): void {
     this.cleanUpCallbacks.forEach(cb => cb());
     surfaceReadyHandlers.delete(this.xcomponentId);
+    // The controller-based XComponent never delivers the native
+    // OnSurfaceDestroyed callback, so release the GL context here — without
+    // this call every mount leaks a GL thread + EGL context + native window.
+    if (this.surfacePrepared) {
+      this.surfacePrepared = false;
+      exglNative.destroySurface(this.xcomponentId);
+    }
   }
 
   build() {
@@ -146,6 +151,11 @@ export struct ExpoGLView {
         type: 'surface',
         controller: this.mXComponentController
       })
+        .onLoad(() => {
+          // surfaceId/size are typically ready the moment onLoad fires —
+          // try immediately instead of waiting for the polling chain.
+          this.pollSurfaceReady();
+        })
         .width('100%')
         .height('100%')
     }

@@ -1,0 +1,7 @@
+{
+	module: {
+		name: 'expo_gl',
+		type: 'har',
+		deviceTypes: ['default'],
+	},
+}

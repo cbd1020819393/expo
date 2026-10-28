@@ -12,10 +12,10 @@
     "metro": "^0.81.0"
   },
   "author": "650 Industries, Inc.",
-  "name": "@oh-rn/expo-gl",
+  "name": "@react-native-ohos/expo-gl",
   "description": "HarmonyOS (RNOH) adaptation of expo-gl: GLView as an OpenGL ES render target with an ExpoWebGLRenderingContext implementing the WebGL 2.0 specification subset.",
   "main": "./src/index.ts",
-  "version": "58.0.0",
+  "version": "1.0.0-beta.1",
   "keywords": [
     "react-native",
     "harmony",
@@ -41,16 +41,21 @@
     "src/",
     "harmony/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "codegen-lib": "react-native codegen-harmony --cpp-output-path ./harmony/expo_gl/src/main/cpp/generated --ets-output-path ./harmony/expo_gl/src/main/ets/generated"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "harmony": {
     "alias": "expo-gl",
     "autolinking": {
       "cmakeLibraryTargetName": "expo_gl",
-      "ohPackageName": "@oh-rn/expo-gl",
+      "ohPackageName": "@react-native-ohos/expo-gl",
       "etsPackageClassName": "ExpoGlPackage",
       "cppPackageClassName": "ExpoGlPackage"
     },
